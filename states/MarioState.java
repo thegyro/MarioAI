@@ -1,4 +1,4 @@
-package myagent.agents;
+package myagent.states;
 
 import ch.idsia.benchmark.mario.environments.Environment;
 
