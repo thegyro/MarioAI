@@ -1,6 +1,7 @@
-package myagent.agents;
+package myagent.states;
 
 import ch.idsia.benchmark.mario.environments.Environment;
+import myagent.actions.MarioAction;
 
 public interface MarioState{	
 	public byte[] getStateRepresentation();
@@ -8,4 +9,8 @@ public interface MarioState{
 	public void updateObservationDetails(
 		final int rfWidth, final int rfHeight, final int egoRow, final int egoCol
 	);
+
+	public boolean canMarioJump();
+	public boolean canMarioShoot();
+	public MarioAction[] getLegalActions();
 }

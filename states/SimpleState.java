@@ -1,8 +1,8 @@
-package myagent.agents;
+package myagent.states;
 
 
 import ch.idsia.benchmark.mario.environments.Environment;
-
+import myagent.actions.MarioAction;
 
 public class SimpleState implements MarioState{
 	
@@ -33,6 +33,38 @@ public class SimpleState implements MarioState{
 	int zLevelScene = 2;
 	int zLevelEnemies = 2;
 
+
+	public boolean canMarioJump(){
+		return isMarioAbleToJump;
+	}
+	
+	public boolean canMarioShoot(){
+		return isMarioAbleToShoot;
+	}
+
+
+	public MarioAction[] getLegalActions(){
+		int paSize = 4;
+		if( canMarioJump() )
+			paSize++;
+
+		MarioAction possibleActions[] = new MarioAction[paSize];
+		int i=0;
+		possibleActions[i++]= MarioAction.LEFT;
+		possibleActions[i++]= MarioAction.RIGHT;
+		possibleActions[i++]= MarioAction.DOWN;
+		if( canMarioShoot() )
+			possibleActions[i++]= MarioAction.SHOOT;
+		else
+			possibleActions[i++]= MarioAction.SPEED;
+		
+		if( canMarioJump() )
+			possibleActions[i++] = MarioAction.JUMP;
+
+		return possibleActions;
+	}
+
+	
 	public void updateObservedState(Environment environment){
 
 	    levelScene = environment.getLevelSceneObservationZ(zLevelScene);
@@ -144,7 +176,6 @@ public class SimpleState implements MarioState{
 		}
 		return rep;
 	}
-
 
 }
 
