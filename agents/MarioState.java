@@ -8,4 +8,7 @@ public interface MarioState{
 	public void updateObservationDetails(
 		final int rfWidth, final int rfHeight, final int egoRow, final int egoCol
 	);
+
+	public boolean canMarioJump();
+	public boolean canMarioShoot();
 }

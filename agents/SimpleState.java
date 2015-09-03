@@ -33,6 +33,16 @@ public class SimpleState implements MarioState{
 	int zLevelScene = 2;
 	int zLevelEnemies = 2;
 
+
+	public boolean canMarioJump(){
+		return isMarioAbleToJump;
+	}
+	
+	public boolean canMarioShoot(){
+		return isMarioAbleToShoot;
+	}
+
+	
 	public void updateObservedState(Environment environment){
 
 	    levelScene = environment.getLevelSceneObservationZ(zLevelScene);
@@ -144,7 +154,6 @@ public class SimpleState implements MarioState{
 		}
 		return rep;
 	}
-
 
 }
 
