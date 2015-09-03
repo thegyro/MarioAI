@@ -30,7 +30,8 @@ public class MarioAction{
 		return (this.actionCode==((MarioAction)ma).actionCode);
 	}
 
-	public boolean[] getKeys(int action){
+	public boolean[] getActionRep(int action){
+		/** Returns the boolean array of keys that the benchmark uses **/
 		boolean[] keys = new boolean[numberOfKeys];
 		keys[keyMapping]=true;
 		return keys;
