@@ -1,7 +1,9 @@
+package myagent.actions;
+
 import java.util.ArrayList;
 
 import ch.idsia.benchmark.mario.environments.Environment;
-import myagent.agents.MarioState;
+import myagent.states.MarioState;
 public class MarioAction{
 	// Define the actions
 	public static final int numberOfKeys = Environment.numberOfKeys;
@@ -23,30 +25,15 @@ public class MarioAction{
 		return actionCode;
 	}
 
+	@Override
+	public boolean equals(Object ma){
+		return (this.actionCode==((MarioAction)ma).actionCode);
+	}
+
 	public boolean[] getKeys(int action){
 		boolean[] keys = new boolean[numberOfKeys];
 		keys[keyMapping]=true;
 		return keys;
 	}
 
-	public MarioAction[] getLegalActions(MarioState state){
-		int paSize = 4;
-		if( state.canMarioJump() )
-			paSize++;
-
-		MarioAction possibleActions[] = new MarioAction[paSize];
-		int i=0;
-		possibleActions[i++]= LEFT;
-		possibleActions[i++]= RIGHT;
-		possibleActions[i++]= DOWN;
-		if( state.canMarioShoot() )
-			possibleActions[i++]= SHOOT;
-		else
-			possibleActions[i++]= SPEED;
-		
-		if( state.canMarioJump() )
-			possibleActions[i++] = JUMP;
-
-		return possibleActions;
-	}
 }
