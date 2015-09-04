@@ -54,6 +54,9 @@ public class QLearning {
 	}
 
 	public void update(MarioState currentState, MarioAction action, MarioState nextState, float reward) {
+		if(currentState == null || action == null) {
+			return;
+		}
 		currStateRep = currentState.getStateRep();
 		actionRep = action.getActionRep();
 
@@ -78,7 +81,7 @@ public class QLearning {
 	}
 
 	public void dumpQValues(String logfile, int num) {
-		
+
 	}
 
 	public void setEpsilon(float epsilon) {
