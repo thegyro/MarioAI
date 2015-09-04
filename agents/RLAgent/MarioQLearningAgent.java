@@ -1,8 +1,22 @@
+/* Java libraries */
+import java.util.ArrayList;
+import java.util.List;
 
+/* MarioAI benchmark classes */
 import ch.idsia.agents.Agent;
 import ch.idsia.agents.LearningAgent;
 import ch.idsia.benchmark.tasks.LearningTask;
 import ch.idsia.tools.EvaluationInfo;
+import ch.idsia.benchmark.mario.environments.Environment;
+
+
+/* Our agent classes */
+import myagent.states.MarioState;
+import myagent.states.MarioStateSelector;
+
+import myagent.actions.MarioAction;
+
+import myagent.agents.QLearning;
 
 
 class MarioQLearningAgent implements LearningAgent {
@@ -16,7 +30,7 @@ class MarioQLearningAgent implements LearningAgent {
 
 	private int episodesCovered;
 	private ArrayList<Float> episodeRewards;
-
+	private QLearning qlearning;
 	private ArrayList<Integer> scores;
 
 	private enum Phase {
@@ -26,7 +40,7 @@ class MarioQLearningAgent implements LearningAgent {
 	private Phase currentPhase;
 
 
-	private String name = 'QLearningAgent';
+	private String name = "QLearningAgent";
 
 	public MarioQLearningAgent() {
 		currentPhase = Phase.INIT;
@@ -44,7 +58,7 @@ class MarioQLearningAgent implements LearningAgent {
 	@Override
 	public void integrateObservation(Environment environment) {
 		lastState = currentState.copy();
-		currentState.updateObservedState(Environment environment);
+		currentState.updateObservedState(environment);
 
 		if(this.currentPhase == Phase.INIT) {
 			Logger.log("Entering the Learning phase");
@@ -74,7 +88,7 @@ class MarioQLearningAgent implements LearningAgent {
 			qlearning.dumpQValues(LearningParams.Q_LOGFILE, episodesCovered);
 
 		episodesCovered++;
-		episodeRewards.add(0);
+		episodeRewards.add(0f);
 	}
 
 	public void learn() {
@@ -102,18 +116,18 @@ class MarioQLearningAgent implements LearningAgent {
 
 	@Override
 	public void init() {
-		this.currentState = Phase.INIT;
+		this.currentPhase = Phase.INIT;
 		this.episodesCovered = 0;
-		episodeRewards.add(0);
+		episodeRewards.add(0f);
 
 		lastState = null;
 	}
 
 	@Override
 	public void reset() {
-		this.currentState = new MarioState();
+		this.currentState = MarioStateSelector.newStateInstance();
 		this.episodesCovered = 0;
-		episodeRewards = new ArrayList<float>();
+		episodeRewards = new ArrayList<Float>();
 		lastState = null;
 	}
 
