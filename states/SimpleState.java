@@ -34,6 +34,12 @@ public class SimpleState implements MarioState{
 	private int zLevelEnemies = 2;
 
 
+	// Things we don't use in the state but do in the reward ( Is that even allowed? )
+	private int prevState_kills =0;
+	private float prevState_x = 0;
+	private int totalKills = 0;
+
+
 	public boolean canMarioJump(){
 		return isMarioAbleToJump;
 	}
@@ -86,6 +92,8 @@ public class SimpleState implements MarioState{
 	    isMarioCarrying = marioState[5] == 1;
 		    
 	    //timeLeft = marioState[10];
+
+	    totalKills = environment.getKillsTotal();
 	}
 
 	public void updateObservationDetails(final int rfWidth, final int rfHeight, final int egoRow, final int egoCol){
@@ -181,16 +189,18 @@ public class SimpleState implements MarioState{
 		Members to calculate the immediate reward
 	**/
 	
-	private int prevState_kills =0;
-	private int prevState_X = 0;
-
 	public float getReward(){
 		/* 
 			10 for a kill.
+			a little bit for going in the right direction
 		*/
 		float reward = 0;
-		reward += 10 * (totalKills - prevStateKills);
-
+		reward += 10 * (totalKills - prevState_kills);
+		prevState_kills = totalKills;
+		
+		// Try something new.
+		reward +=  (marioFloatPos[0] - prevState_x); // /timeLeft;
+		prevState_x = marioFloatPos[0];
 
 		return reward;
 	}
