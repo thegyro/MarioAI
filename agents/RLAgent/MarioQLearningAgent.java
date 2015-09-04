@@ -48,7 +48,7 @@ class MarioQLearningAgent implements LearningAgent {
 		currentPhase = Phase.INIT;
 		episodesCovered = 0;
 		episodeRewards = new ArrayList<Float>();
-		currentState = MarioStateSelector.newStateInstance()
+		currentState = MarioStateSelector.newStateInstance();
 
 		Logger.log("-----------Super Mario Agent Created-------------");
 	}
@@ -66,7 +66,7 @@ class MarioQLearningAgent implements LearningAgent {
 		currentState.updateObservedState(environment);
 
 		if(this.currentPhase == Phase.INIT) {
-			Logger.log("Entering the Learning phase");
+			Logger.log("-------------Entering the Learning phase--------------");
 			this.currentPhase = Phase.LEARN;
 		} else if (this.currentPhase == Phase.LEARN) {
 			float reward = currentState.getReward();
@@ -90,7 +90,7 @@ class MarioQLearningAgent implements LearningAgent {
 		scores.add(score);
 
 		if(LearningParams.DUMP_INTER_QLOGFILES)
-			qlearning.dumpQValues(LearningParams.Q_LOGFILE, episodesCovered);
+			qlearning.dumpQValues(LearningParams.Q_LOG_FILE, episodesCovered);
 
 		episodesCovered++;
 		episodeRewards.add(0f);
@@ -106,7 +106,7 @@ class MarioQLearningAgent implements LearningAgent {
 
 	public void goToEval() {
 		Logger.log("---------------Dumping scores---------------");
-		dumpScores(LearningParams.SCORE_FILE);
+		Logger.dumpScores(LearningParams.SCORE_FILE);
 
 		Logger.log("---------------Entering the evaluation phase--------- ");
 		currentPhase = Phase.EVAL;
@@ -115,9 +115,6 @@ class MarioQLearningAgent implements LearningAgent {
 		qlearning.setAlpha(0);
 	}
 
-	public void dumpScores(String logfile) {
-
-	}
 
 	@Override
 	public void init() {
@@ -135,6 +132,7 @@ class MarioQLearningAgent implements LearningAgent {
 		this.episodesCovered = 0;
 		episodeRewards = new ArrayList<Float>();
 		lastState = null;
+		lastAction = null;
 	}
 
 	@Override

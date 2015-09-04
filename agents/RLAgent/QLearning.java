@@ -7,8 +7,8 @@ public class QLearning {
 	private DefaultHashMap<Pair<byte[],boolean[]>, float> QValues;
 	
 	public QLearning() {
-		epsilon = LearningPrams.EPSILON;
-		alpha = LearningPrams.ALPHA;
+		epsilon = LearningParams.EPSILON;
+		alpha = LearningParams.ALPHA;
 		gamma = LearningParams.GAMMA;
 
 		QValues = new DefaultHashMap<Pair<byte[], boolean[]>, float>(0);
