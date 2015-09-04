@@ -46,6 +46,8 @@ class MarioQLearningAgent implements LearningAgent {
 		currentPhase = Phase.INIT;
 		episodesCovered = 0;
 		episodeRewards = new ArrayList<Float>();
+
+		Logger.log("-----------Super Mario Agent Created-------------");
 	}
 
 
@@ -121,6 +123,7 @@ class MarioQLearningAgent implements LearningAgent {
 		episodeRewards.add(0f);
 
 		lastState = null;
+		lastAction = null;
 	}
 
 	@Override
