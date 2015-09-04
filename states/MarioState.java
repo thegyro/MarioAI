@@ -13,4 +13,5 @@ public interface MarioState{
 	public boolean canMarioJump();
 	public boolean canMarioShoot();
 	public MarioAction[] getLegalActions();
+	public float getReward();
 }

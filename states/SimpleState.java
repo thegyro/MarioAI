@@ -30,8 +30,8 @@ public class SimpleState implements MarioState{
 	protected int marioEgoCol;
 
 	//what level of detail do we want?
-	int zLevelScene = 2;
-	int zLevelEnemies = 2;
+	private int zLevelScene = 2;
+	private int zLevelEnemies = 2;
 
 
 	public boolean canMarioJump(){
@@ -175,6 +175,24 @@ public class SimpleState implements MarioState{
 			}
 		}
 		return rep;
+	}
+
+	/** 
+		Members to calculate the immediate reward
+	**/
+	
+	private int prevState_kills =0;
+	private int prevState_X = 0;
+
+	public float getReward(){
+		/* 
+			10 for a kill.
+		*/
+		float reward = 0;
+		reward += 10 * (totalKills - prevStateKills);
+
+
+		return reward;
 	}
 
 }
