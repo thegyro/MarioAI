@@ -1,75 +1,145 @@
 
+import ch.idsia.agents.Agent;
 import ch.idsia.agents.LearningAgent;
+import ch.idsia.benchmark.tasks.LearningTask;
+import ch.idsia.tools.EvaluationInfo;
 
-class MarioQLearningAgent extends ReinfocementAgent implements LearningAgent {
-	//Mario State and Action hashed into unique itnegers.
-	private DefaultHashMap<Pair<byte[],boolean[]>, float> QValues;
+
+class MarioQLearningAgent implements LearningAgent {
+	
 	private MarioState currentState;
+	private MarioState lastState;
+	private MarioAction lastAction;
 
-	public MarioQLearningAgent(int numTraining=100, float epsilon=0.8, float alpha=0.1, float gamma=0.9) {
-		super(numTraining, epsilon, alpha, gamma);
-		QValues = new DefaultHashMap<Pair<byte[], boolean[]>, float>(0);
+
+	private LearningTask learningTask;
+
+	private int episodesCovered;
+	private ArrayList<Float> episodeRewards;
+
+	private ArrayList<Integer> scores;
+
+	private enum Phase {
+		INIT,LEARN,EVAL
 	}
 
-	public float getQValue(MarioState state, MarioAction action) {
-		byte[] stateRep = state.getStateRep();
-		boolean[] actionRep = action.getActionRep();
-		Pair<byte[], boolean[]> stateAction = new Pair<byte[],boolean[]>(stateRep, actionRep);
-		return QValues.get(stateAction);
+	private Phase currentPhase;
+
+
+	private String name = 'QLearningAgent';
+
+	public MarioQLearningAgent() {
+		currentPhase = Phase.INIT;
+		episodesCovered = 0;
+		episodeRewards = new ArrayList<Float>();
 	}
 
-	public float computeValueFromQValue(MarioState state) {
-		MarioAction[] actions = state.getLegalActions();		
-		float max = 0.0;
-		float cur = 0.0;
-		for(MarioAction action: actions) {
-			cur = this.getQValue(state, action);
-			if(cur > max)
-				max = cur;
-		}
 
-		return max;
-	}
-
-	public MarioAction computeActionFromQValue(MarioState state) {
-		MarioAction[] actions = state.getLegalActions();
-		float max = 0.0;
-		float cur = 0.0;
-		MarioAction bestAction = null;
-		
-		for(MarioAction action: actions) {
-			cur = this.getQValue(state, action);
-			if(cur > max) {
-				max = cur;
-				bestAction = action;
-			}
-		}
-
-		return bestAction;
-
-	}
-
+	@Override
 	public boolean[] getAction() {
-		MarioAction[] actions = currentState.getLegalActions();
+		return qlearning.getAction(currentState);
+	}
 
-		if(Math.random() > this.epsilon) {
-			MarioAction bestAction = this.computeActionFromQValue(currentState);
-			return bestAction.getActionRep();
-		} else {
-			MarioAction randomAction = actions[new Random().nextInt(actions.length)];
-			return randomAction.getActionRep();
+
+	@Override
+	public void integrateObservation(Environment environment) {
+		lastState = currentState.copy();
+		currentState.updateObservedState(Environment environment);
+
+		if(this.currentPhase == Phase.INIT) {
+			Logger.log("Entering the Learning phase");
+			this.currentPhase = Phase.LEARN;
+		} else if (this.currentPhase == Phase.LEARN) {
+			float reward = currentState.getReward();
+			episodeRewards[episodesCovered] += reward;
+			this.update(lastState, lastAction, currentState, reward);
 		}
 	}
 
-	public void update(MarioAction action, MarioState nextState, float reward) {
-		currStateRep = currentState.getStateRep();
-		actionRep = action.getActionRep();
 
-		float sampleQValue = reward + gamma*computeValueFromQValue(nextState);
-		float newQValue = (1-alpha)*getQValue(currentState, action) + alpha*sampleQValue;
-		Pair<byte[],boolean[]> stateAction = new Pair<byte[],boolean[]>(currStateRep, actionRep);
-		QValue.put(stateAction, newQValue);
+	public void learnOnce() {
+		List<Objects> args = new ArrayList<Objects>();
+		args.add(episodesCovered);
+		Logger.log("Learning started. Episode %d", args);
+
+		init();
+		learningTask.runSingleEpisode(1);
+
+		EvaluationInfo evaluationInfo = learningTask.getEnvironment.getEvaluationInfo();
+		int score = evaluationInfo.computeWeightedFitness();
+
+		scores.add(score);
+
+		if(LearningParams.DUMP_INTER_QLOGFILES)
+			qlearning.dumpQValues(LearningParams.Q_LOGFILE, episodesCovered);
+
+		episodesCovered++;
+		episodeRewards.add(0);
 	}
 
+	public void learn() {
+		for(int i = 0; i < LearningParams.NUM_TRAINING; i++) {
+			learnOnce();
+		}
+
+		goToEval();
+	}
+
+	public void goToEval() {
+		Logger.log("---------------Dumping scores---------------");
+		dumpScores(LearningParams.SCORE_FILE);
+
+		Logger.log("---------------Entering the evaluation phase--------- ");
+		currentPhase = Phase.EVAL;
+		Logger.log("---------------Turning epsilon and alpha off---------");
+		qlearning.setEpsilon(0);
+		qlearning.setAlpha(0);
+	}
+
+	public void dumpScores(String logfile) {
+
+	}
+
+	@Override
+	public void init() {
+		this.currentState = Phase.INIT;
+		this.episodesCovered = 0;
+		episodeRewards.add(0);
+
+		lastState = null;
+	}
+
+	@Override
+	public void reset() {
+		this.currentState = new MarioState();
+		this.episodesCovered = 0;
+		episodeRewards = new ArrayList<float>();
+		lastState = null;
+	}
+
+	@Override
+	public Agent getBestAgent() {
+		return this;
+	}
+
+	@Override
+	public void setLearningTask(LearningTask learningTask) {
+		this.learningTask = learningTask;
+	}
+
+	@Override
+	public String getName() {
+		return this.name;
+	}
+
+	@Override
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	@Override
+	public void giveIntermediateReward(float intermediateReward) {
+
+	}
 
 }
