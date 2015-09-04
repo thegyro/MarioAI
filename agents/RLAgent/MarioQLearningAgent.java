@@ -46,6 +46,7 @@ class MarioQLearningAgent implements LearningAgent {
 		currentPhase = Phase.INIT;
 		episodesCovered = 0;
 		episodeRewards = new ArrayList<Float>();
+		currentState = MarioStateSelector.newStateInstance()
 
 		Logger.log("-----------Super Mario Agent Created-------------");
 	}
