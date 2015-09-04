@@ -11,6 +11,8 @@ import ch.idsia.benchmark.mario.environments.Environment;
 
 
 /* Our agent classes */
+import myagent.utils.Logger;
+
 import myagent.states.MarioState;
 import myagent.states.MarioStateSelector;
 
@@ -74,7 +76,7 @@ class MarioQLearningAgent implements LearningAgent {
 
 
 	public void learnOnce() {
-		List<Objects> args = new ArrayList<Objects>();
+		List<Object> args = new ArrayList<Object>();
 		args.add(episodesCovered);
 		Logger.log("Learning started. Episode %d", args);
 

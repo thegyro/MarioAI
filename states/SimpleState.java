@@ -59,10 +59,11 @@ public class SimpleState implements MarioState{
 		possibleActions[i++]= MarioAction.LEFT;
 		possibleActions[i++]= MarioAction.RIGHT;
 		possibleActions[i++]= MarioAction.DOWN;
-		if( canMarioShoot() )
-			possibleActions[i++]= MarioAction.SHOOT;
-		else
-			possibleActions[i++]= MarioAction.SPEED;
+		// if( canMarioShoot() )
+		// 	possibleActions[i++]= MarioAction.SHOOT;
+		// else
+		// 	possibleActions[i++]= MarioAction.SPEED;
+		possibleActions[i++]= MarioAction.SPEED;
 		
 		if( canMarioJump() )
 			possibleActions[i++] = MarioAction.JUMP;
