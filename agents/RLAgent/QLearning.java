@@ -1,17 +1,29 @@
+package myagent.agents.RLAgent;
+
+import myagent.utils.DefaultHashMap;
+import myagent.utils.Pair;
+
+import java.util.Random;
+
+import myagent.states.MarioState;
+import myagent.actions.MarioAction;
+
 public class QLearning {
 	private float alpha;
 	private float gamma;
 	private float epsilon;
 	private int numTraining;
 
-	private DefaultHashMap<Pair<byte[],boolean[]>, float> QValues;
+	private MarioAction lastAction;
+
+	private DefaultHashMap<Pair<byte[],boolean[]>, Float> QValues;
 	
 	public QLearning() {
 		epsilon = LearningParams.EPSILON;
 		alpha = LearningParams.ALPHA;
 		gamma = LearningParams.GAMMA;
 
-		QValues = new DefaultHashMap<Pair<byte[], boolean[]>, float>(0);
+		QValues = new DefaultHashMap<Pair<byte[], boolean[]>, Float>(0);
 
 	}
 
@@ -24,8 +36,8 @@ public class QLearning {
 
 	public float computeValueFromQValue(MarioState state) {
 		MarioAction[] actions = state.getLegalActions();		
-		float max = 0.0;
-		float cur = 0.0;
+		float max = LearningParams.NEGATIVE_INFINITY;
+		float cur = 0.0f;
 		for(MarioAction action: actions) {
 			cur = this.getQValue(state, action);
 			if(cur > max)
@@ -37,8 +49,8 @@ public class QLearning {
 
 	public MarioAction computeActionFromQValue(MarioState state) {
 		MarioAction[] actions = state.getLegalActions();
-		float max = 0.0;
-		float cur = 0.0;
+		float max = LearningParams.NEGATIVE_INFINITY;
+		float cur = 0.0f;
 		MarioAction bestAction = null;
 		
 		for(MarioAction action: actions) {
@@ -57,13 +69,13 @@ public class QLearning {
 		if(currentState == null || action == null) {
 			return;
 		}
-		currStateRep = currentState.getStateRep();
-		actionRep = action.getActionRep();
+		byte[] currStateRep = currentState.getStateRep();
+		boolean[] actionRep = action.getActionRep();
 
 		float sampleQValue = reward + gamma*computeValueFromQValue(nextState);
 		float newQValue = (1-alpha)*getQValue(currentState, action) + alpha*sampleQValue;
 		Pair<byte[],boolean[]> stateAction = new Pair<byte[],boolean[]>(currStateRep, actionRep);
-		QValue.put(stateAction, newQValue);
+		QValues.put(stateAction, newQValue);
 	}
 
 	public boolean[] getAction(MarioState currentState) {
@@ -75,9 +87,17 @@ public class QLearning {
 			return bestAction.getActionRep();
 		} else {
 			MarioAction randomAction = actions[new Random().nextInt(actions.length)];
-			lastAction = bestAction;
+			lastAction = randomAction;
 			return randomAction.getActionRep();
 		}
+	}
+
+	public MarioAction getLastAction() {
+		return lastAction;
+	}
+
+	public void setLastAction(MarioAction action) {
+		lastAction = action;
 	}
 
 	public void dumpQValues(String logfile, int num) {

@@ -1,3 +1,5 @@
+package myagent.agents.RLAgent;
+
 /* Java libraries */
 import java.util.ArrayList;
 import java.util.List;
@@ -18,15 +20,13 @@ import myagent.states.MarioStateSelector;
 
 import myagent.actions.MarioAction;
 
-import myagent.agents.QLearning;
+import myagent.agents.RLAgent.QLearning;
 
 
 class MarioQLearningAgent implements LearningAgent {
 	
 	private MarioState currentState;
 	private MarioState lastState;
-	private MarioAction lastAction;
-
 
 	private LearningTask learningTask;
 
@@ -70,8 +70,9 @@ class MarioQLearningAgent implements LearningAgent {
 			this.currentPhase = Phase.LEARN;
 		} else if (this.currentPhase == Phase.LEARN) {
 			float reward = currentState.getReward();
-			episodeRewards[episodesCovered] += reward;
-			this.update(lastState, lastAction, currentState, reward);
+			float sofar = episodeRewards.get(episodesCovered) + reward;
+			episodeRewards.set(episodesCovered, sofar);
+			qlearning.update(lastState, qlearning.getLastAction(), currentState, reward);
 		}
 	}
 
@@ -84,7 +85,7 @@ class MarioQLearningAgent implements LearningAgent {
 		init();
 		learningTask.runSingleEpisode(1);
 
-		EvaluationInfo evaluationInfo = learningTask.getEnvironment.getEvaluationInfo();
+		EvaluationInfo evaluationInfo = learningTask.getEnvironment().getEvaluationInfo();
 		int score = evaluationInfo.computeWeightedFitness();
 
 		scores.add(score);
@@ -106,7 +107,7 @@ class MarioQLearningAgent implements LearningAgent {
 
 	public void goToEval() {
 		Logger.log("---------------Dumping scores---------------");
-		Logger.dumpScores(LearningParams.SCORE_FILE);
+		Logger.dumpScores(scores);
 
 		Logger.log("---------------Entering the evaluation phase--------- ");
 		currentPhase = Phase.EVAL;
@@ -123,7 +124,7 @@ class MarioQLearningAgent implements LearningAgent {
 		episodeRewards.add(0f);
 
 		lastState = null;
-		lastAction = null;
+		qlearning.setLastAction(null);
 	}
 
 	@Override
@@ -132,7 +133,7 @@ class MarioQLearningAgent implements LearningAgent {
 		this.episodesCovered = 0;
 		episodeRewards = new ArrayList<Float>();
 		lastState = null;
-		lastAction = null;
+		qlearning.setLastAction(null);
 	}
 
 	@Override

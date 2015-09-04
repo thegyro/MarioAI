@@ -1,3 +1,6 @@
+package myagent.utils;
+
+import java.util.HashMap;
 
 public class DefaultHashMap<K,V> extends HashMap<K,V> {
   /* Returns defaultValue if the key does not exist */
