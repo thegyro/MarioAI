@@ -23,7 +23,7 @@ import myagent.actions.MarioAction;
 import myagent.agents.RLAgent.QLearning;
 
 
-class MarioQLearningAgent implements LearningAgent {
+public class MarioQLearningAgent implements LearningAgent {
 	
 	private MarioState currentState;
 	private MarioState lastState;
@@ -41,7 +41,6 @@ class MarioQLearningAgent implements LearningAgent {
 
 	private Phase currentPhase;
 
-
 	private String name = "QLearningAgent";
 
 	public MarioQLearningAgent() {
@@ -49,7 +48,7 @@ class MarioQLearningAgent implements LearningAgent {
 		episodesCovered = 0;
 		episodeRewards = new ArrayList<Float>();
 		currentState = MarioStateSelector.newStateInstance();
-
+		qlearning = new QLearning();
 		Logger.log("-----------Super Mario Agent Created-------------");
 	}
 
@@ -70,19 +69,24 @@ class MarioQLearningAgent implements LearningAgent {
 			this.currentPhase = Phase.LEARN;
 		} else if (this.currentPhase == Phase.LEARN) {
 			float reward = currentState.getReward();
+			
 			float sofar = episodeRewards.get(episodesCovered) + reward;
 			episodeRewards.set(episodesCovered, sofar);
 			qlearning.update(lastState, qlearning.getLastAction(), currentState, reward);
 		}
 	}
 
+	@Override
+	public void setObservationDetails(final int rfWidth, final int rfHeight, final int egoRow, final int egoCol){
+		currentState.updateObservationDetails(rfWidth, rfHeight, egoRow, egoCol);
+	}
 
 	public void learnOnce() {
 		List<Object> args = new ArrayList<Object>();
 		args.add(episodesCovered);
 		Logger.log("Learning started. Episode %d", args);
-
 		init();
+		episodeRewards.add(0f);
 		learningTask.runSingleEpisode(1);
 
 		EvaluationInfo evaluationInfo = learningTask.getEnvironment().getEvaluationInfo();
@@ -94,14 +98,14 @@ class MarioQLearningAgent implements LearningAgent {
 			qlearning.dumpQValues(LearningParams.Q_LOG_FILE, episodesCovered);
 
 		episodesCovered++;
-		episodeRewards.add(0f);
+		
 	}
 
 	public void learn() {
 		for(int i = 0; i < LearningParams.NUM_TRAINING; i++) {
 			learnOnce();
 		}
-
+		System.out.printf("LEARNT %d times\n", LearningParams.NUM_TRAINING);
 		goToEval();
 	}
 
@@ -121,8 +125,6 @@ class MarioQLearningAgent implements LearningAgent {
 	public void init() {
 		this.currentPhase = Phase.INIT;
 		this.episodesCovered = 0;
-		episodeRewards.add(0f);
-
 		lastState = null;
 		qlearning.setLastAction(null);
 	}
@@ -130,8 +132,9 @@ class MarioQLearningAgent implements LearningAgent {
 	@Override
 	public void reset() {
 		this.currentState = MarioStateSelector.newStateInstance();
-		this.episodesCovered = 0;
-		episodeRewards = new ArrayList<Float>();
+		// The following 2 lines shouldn't be here. They're to be set at the beginning. Not reset between episodes
+		// this.episodesCovered = 0;
+		// episodeRewards = new ArrayList<Float>();
 		lastState = null;
 		qlearning.setLastAction(null);
 	}
@@ -159,6 +162,21 @@ class MarioQLearningAgent implements LearningAgent {
 	@Override
 	public void giveIntermediateReward(float intermediateReward) {
 
+	}
+
+	/* These need to be implemented */
+	@Override
+	public void setEvaluationQuota(long evalQuota){
+		
+	}
+
+	@Override
+	public void newEpisode(){
+
+	}
+	@Override
+	public void giveReward(float reward){
+		System.out.println("Got reward!");
 	}
 
 }

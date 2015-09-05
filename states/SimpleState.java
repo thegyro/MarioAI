@@ -6,6 +6,11 @@ import myagent.actions.MarioAction;
 
 public class SimpleState implements MarioState{
 	
+	private boolean inited; // true if this represents a valid state
+	SimpleState(){
+		inited = false;
+	}
+
 	/* The params that BasicMarioAIAgent had. Good starting point for our state */
 	protected byte[][] levelScene;
 	protected byte[][] enemyScene;
@@ -39,16 +44,17 @@ public class SimpleState implements MarioState{
 	private float prevState_x = 0;
 	private int totalKills = 0;
 
-
+	@Override
 	public boolean canMarioJump(){
 		return isMarioAbleToJump;
 	}
 	
+	@Override
 	public boolean canMarioShoot(){
 		return isMarioAbleToShoot;
 	}
 
-
+	@Override
 	public MarioAction[] getLegalActions(){
 		int paSize = 4;
 		if( canMarioJump() )
@@ -71,7 +77,7 @@ public class SimpleState implements MarioState{
 		return possibleActions;
 	}
 
-	
+	@Override
 	public void updateObservedState(Environment environment){
 
 	    levelScene = environment.getLevelSceneObservationZ(zLevelScene);
@@ -95,8 +101,11 @@ public class SimpleState implements MarioState{
 	    //timeLeft = marioState[10];
 
 	    totalKills = environment.getKillsTotal();
+
+	    inited=true;
 	}
 
+	@Override
 	public void updateObservationDetails(final int rfWidth, final int rfHeight, final int egoRow, final int egoCol){
 	    receptiveFieldWidth = rfWidth;
 	    receptiveFieldHeight = rfHeight;
@@ -104,7 +113,8 @@ public class SimpleState implements MarioState{
 	    marioEgoRow = egoRow;
 	    marioEgoCol = egoCol;
 	}
-
+	
+	@Override
 	public byte[] getStateRep(){
 		/**
 		 Returns a minimal encoding of the state 
@@ -126,7 +136,7 @@ public class SimpleState implements MarioState{
 		/**
 			Encodes any relevant info we have about mario in a byte[]
 		**/
-		byte[] mState = new byte[4];
+		byte[] mState = new byte[5];
 		mState[3] = (byte)(marioStatus >>> 24);
         mState[2] = (byte)(marioStatus >>> 16);
         mState[1] =(byte)(marioStatus >>> 8);
@@ -155,20 +165,25 @@ public class SimpleState implements MarioState{
 					1X=> Monster
 				Hence 4 blocks are encoded in a single byte.
 		**/
-		if(ls.length==0)
+		if(ls.length==0)	// Just incase
 			return new byte[0];
 
 		int bitsUsed = 2;
 		int repLength = ((ls.length*ls[0].length) * bitsUsed); //How many bits
-
-		repLength+=repLength%8;	// Incase we don't fit perfectly.
+		
+		if(repLength%8!=0)
+			repLength+= 8-(repLength%8);	// Incase we don't fit perfectly.
+		
 		repLength/=8;	// How many bytes do we need?
-
 		byte[] rep = new byte[repLength];
-		int k=0, shiftBy=0;
+		int k=-1, shiftBy=0;
 		byte unitCode;	// X0=> Air, X1=> Solid, 0=>No Monster, 1X=> Monster
 		for(int i=0;i<ls.length;i++){
 			for(int j=0;j<ls[i].length;j++){
+				if(shiftBy==0){
+					k++;
+					rep[k]=0;
+				}
 				unitCode=0;
 				if(levelScene[i][j]==1)
 					unitCode|=1;
@@ -177,10 +192,6 @@ public class SimpleState implements MarioState{
 				unitCode <<= shiftBy;
 				rep[k] |= unitCode;
 				shiftBy = (shiftBy+2)%8;
-				if(shiftBy==0){
-					k++;
-					rep[k]=0;
-				}
 			}
 		}
 		return rep;
@@ -189,7 +200,7 @@ public class SimpleState implements MarioState{
 	/** 
 		Members to calculate the immediate reward
 	**/
-	
+	@Override
 	public float getReward(){
 		/* 
 			10 for a kill.
@@ -202,12 +213,15 @@ public class SimpleState implements MarioState{
 		// Try something new.
 		reward +=  (marioFloatPos[0] - prevState_x); // /timeLeft;
 		prevState_x = marioFloatPos[0];
-
 		return reward;
 	}
 
-	public SimpleState copy(){
-		SimpleState copied;
+	@Override
+	public MarioState copy(){
+		SimpleState copied = new SimpleState();
+		
+		if(!inited)
+			return copied;
 		copied.levelScene = new byte[levelScene.length][levelScene[0].length];
 		int i=0;
 		int j=0;
@@ -219,7 +233,6 @@ public class SimpleState implements MarioState{
 			i++;
 		}
 
-	;
 		copied.enemyScene = new byte[enemyScene.length][enemyScene[0].length];
 		i=0;
 		j=0;
@@ -258,6 +271,8 @@ public class SimpleState implements MarioState{
 		copied.prevState_kills = prevState_kills;
 		copied.prevState_x = prevState_x;
 		copied.totalKills = totalKills;
+
+		copied.inited=true;
 
 		return copied;
 	}
