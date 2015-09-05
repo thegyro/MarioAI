@@ -10,7 +10,7 @@ public class LearningParams {
 	public final static float NEGATIVE_INFINITY = -999999f;
 
 
-	public final static float EPSILON = 0.8f;
+	public final static float EPSILON = 0.3f;
 	public final static float GAMMA  = 0.9f;
 	public final static float ALPHA  = 0.1f;
 }

@@ -16,21 +16,26 @@ public class QLearning {
 
 	private MarioAction lastAction;
 
-	private DefaultHashMap<Pair<byte[],boolean[]>, Float> QValues;
+	private DefaultHashMap<Pair<MarioState,MarioAction>, Float> QValues;
 	
 	public QLearning() {
 		epsilon = LearningParams.EPSILON;
 		alpha = LearningParams.ALPHA;
 		gamma = LearningParams.GAMMA;
 
-		QValues = new DefaultHashMap<Pair<byte[], boolean[]>, Float>(0f);
+		QValues = new DefaultHashMap<Pair<MarioState,MarioAction>, Float>(0f);
 
 	}
 
 	public float getQValue(MarioState state, MarioAction action) {
-		byte[] stateRep = state.getStateRep();
-		boolean[] actionRep = action.getActionRep();
-		Pair<byte[], boolean[]> stateAction = new Pair<byte[],boolean[]>(stateRep, actionRep);
+		Pair<MarioState,MarioAction> stateAction = new Pair<MarioState,MarioAction>(state,action);
+		
+		// for(byte b:stateRep)
+		// 	System.out.printf("%d",(int)b);
+		// System.out.println();
+		// System.out.println(stateAction.hashCode());
+		
+		
 		return QValues.get(stateAction);
 	}
 
@@ -69,12 +74,10 @@ public class QLearning {
 		if(currentState == null || action == null) {
 			return;
 		}
-		byte[] currStateRep = currentState.getStateRep();
-		boolean[] actionRep = action.getActionRep();
-
+		
 		float sampleQValue = reward + gamma*computeValueFromQValue(nextState);
 		float newQValue = (1-alpha)*getQValue(currentState, action) + alpha*sampleQValue;
-		Pair<byte[],boolean[]> stateAction = new Pair<byte[],boolean[]>(currStateRep, actionRep);
+		Pair<MarioState, MarioAction> stateAction = new Pair<MarioState, MarioAction>(currentState, action);
 		QValues.put(stateAction, newQValue);
 	}
 
