@@ -4,7 +4,7 @@ import ch.idsia.benchmark.mario.environments.Environment;
 import myagent.actions.MarioAction;
 
 public interface MarioState{	
-	public byte[] getStateRepresentation();
+	public byte[] getStateRep();
 	public void updateObservedState(Environment environment);
 	public void updateObservationDetails(
 		final int rfWidth, final int rfHeight, final int egoRow, final int egoCol
@@ -14,4 +14,6 @@ public interface MarioState{
 	public boolean canMarioShoot();
 	public MarioAction[] getLegalActions();
 	public float getReward();
+
+	public MarioState copy();
 }

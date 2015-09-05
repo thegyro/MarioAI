@@ -105,7 +105,7 @@ public class SimpleState implements MarioState{
 	    marioEgoCol = egoCol;
 	}
 
-	public byte[] getStateRepresentation(){
+	public byte[] getStateRep(){
 		/**
 		 Returns a minimal encoding of the state 
 		 **/
@@ -206,5 +206,60 @@ public class SimpleState implements MarioState{
 		return reward;
 	}
 
+	public SimpleState copy(){
+		SimpleState copied;
+		copied.levelScene = new byte[levelScene.length][levelScene[0].length];
+		int i=0;
+		int j=0;
+		for(byte[] l:levelScene){
+			j=0;
+			for(byte b:l){
+				copied.levelScene[i][j++] = b;
+			}
+			i++;
+		}
+
+	;
+		copied.enemyScene = new byte[enemyScene.length][enemyScene[0].length];
+		i=0;
+		j=0;
+		for(byte[] e:enemyScene){
+			j=0;
+			for(byte b:e){
+				copied.enemyScene[i][j++] = b;
+			}
+			i++;
+		}
+
+		copied.marioFloatPos = marioFloatPos;
+		copied.enemiesFloatPos = enemiesFloatPos;
+
+		i=0;
+		copied.marioState = new int[marioState.length];
+		for(int ms:marioState)
+			copied.marioState[i++]=ms;
+
+
+		copied.marioStatus = marioStatus;
+		copied.marioMode = marioMode;
+		copied.isMarioOnGround = isMarioOnGround;
+		copied.isMarioAbleToJump = isMarioAbleToJump;
+		copied.isMarioAbleToShoot = isMarioAbleToShoot;
+		copied.isMarioCarrying = isMarioCarrying;
+
+
+		// Observation details
+		copied.receptiveFieldWidth = receptiveFieldWidth;
+		copied.receptiveFieldHeight = receptiveFieldHeight;
+		copied.marioEgoRow = marioEgoRow;
+		copied.marioEgoCol = marioEgoCol;
+
+		// Things we don't use in the state but do in the reward ( Is that even allowed? )
+		copied.prevState_kills = prevState_kills;
+		copied.prevState_x = prevState_x;
+		copied.totalKills = totalKills;
+
+		return copied;
+	}
 }
 

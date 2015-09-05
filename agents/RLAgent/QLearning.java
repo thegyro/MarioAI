@@ -23,7 +23,7 @@ public class QLearning {
 		alpha = LearningParams.ALPHA;
 		gamma = LearningParams.GAMMA;
 
-		QValues = new DefaultHashMap<Pair<byte[], boolean[]>, Float>(0);
+		QValues = new DefaultHashMap<Pair<byte[], boolean[]>, Float>(0f);
 
 	}
 
