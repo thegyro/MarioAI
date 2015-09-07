@@ -49,7 +49,7 @@ public class MarioQLearningAgent implements LearningAgent {
 		episodeRewards = new ArrayList<Float>();
 		currentState = MarioStateSelector.newStateInstance();
 		qlearning = new QLearning();
-		Logger.log("-----------Super Mario Agent Created-------------");
+		Logger.log("-----------Super Mario Agent Created-------------\n");
 	}
 
 
