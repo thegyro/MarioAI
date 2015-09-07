@@ -16,26 +16,20 @@ public class QLearning {
 
 	private MarioAction lastAction;
 
-	private DefaultHashMap<Pair<MarioState,MarioAction>, Float> QValues;
+	//private DefaultHashMap<Pair<MarioState,MarioAction>, Float> QValues;
+	DefaultHashMap<Pair<MarioState,MarioAction>, Float> QValues;
 	
 	public QLearning() {
 		epsilon = LearningParams.EPSILON;
 		alpha = LearningParams.ALPHA;
 		gamma = LearningParams.GAMMA;
-
+		System.out.println("QT Constructor");
 		QValues = new DefaultHashMap<Pair<MarioState,MarioAction>, Float>(0f);
 
 	}
 
 	public float getQValue(MarioState state, MarioAction action) {
 		Pair<MarioState,MarioAction> stateAction = new Pair<MarioState,MarioAction>(state,action);
-		
-		// for(byte b:stateRep)
-		// 	System.out.printf("%d",(int)b);
-		// System.out.println();
-		// System.out.println(stateAction.hashCode());
-		
-		
 		return QValues.get(stateAction);
 	}
 
@@ -81,16 +75,18 @@ public class QLearning {
 		QValues.put(stateAction, newQValue);
 	}
 
-	public boolean[] getAction(MarioState currentState) {
+	public boolean[] getAction(MarioState currentState, boolean tellAction) {
 		MarioAction[] actions = currentState.getLegalActions();
 
 		if(Math.random() > this.epsilon) {
 			MarioAction bestAction = this.computeActionFromQValue(currentState);
 			lastAction = bestAction;
+			if(tellAction)			System.out.println("Optimum action");
 			return bestAction.getActionRep();
 		} else {
 			MarioAction randomAction = actions[new Random().nextInt(actions.length)];
 			lastAction = randomAction;
+			if(tellAction)	System.out.println("Random action");
 			return randomAction.getActionRep();
 		}
 	}
