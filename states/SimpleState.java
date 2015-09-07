@@ -44,6 +44,7 @@ public class SimpleState implements MarioState{
 	// Things we don't use in the state but do in the reward ( Is that even allowed? )
 	private int prevState_kills =0;
 	private float prevState_x = 0;
+	private float prevState_score = 0;
 	private int totalKills = 0;
 
 	@Override
@@ -101,6 +102,7 @@ public class SimpleState implements MarioState{
 	    isMarioCarrying = marioState[5] == 1;
 		    
 	    //timeLeft = marioState[10];
+	    currentScore = environment.getIntermediateReward();
 
 	    totalKills = environment.getKillsTotal();
 
@@ -150,6 +152,7 @@ public class SimpleState implements MarioState{
 		/**
 			Encodes any relevant info we have about mario in a byte[]
 		**/
+		/*
 		byte[] mState = new byte[5];
 		mState[3] = (byte)(marioStatus >>> 24);
         mState[2] = (byte)(marioStatus >>> 16);
@@ -167,6 +170,11 @@ public class SimpleState implements MarioState{
 		if(isMarioCarrying)
 			mState[4]|=8;
 		return mState;
+		*/
+		byte mState[] = new byte[1];
+		mState[0] = (byte)marioMode;
+		return mState;
+
 	}
 
 	private byte[] encodeLevelScene(byte[][] ls){
@@ -229,6 +237,8 @@ public class SimpleState implements MarioState{
 		// Try something new.
 		reward +=  20 * (marioFloatPos[0] - prevState_x); // /timeLeft;
 		prevState_x = marioFloatPos[0];
+		reward += currentScore - prevState_score;
+		prevState_score = currentScore;
 		// System.out.println("Reward: "+reward);
 		return reward;
 	}
