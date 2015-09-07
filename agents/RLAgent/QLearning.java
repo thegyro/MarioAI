@@ -3,7 +3,9 @@ package myagent.agents.RLAgent;
 import myagent.utils.DefaultHashMap;
 import myagent.utils.Pair;
 
+
 import java.util.Random;
+import java.util.ArrayList;
 
 import myagent.states.MarioState;
 import myagent.actions.MarioAction;
@@ -50,17 +52,21 @@ public class QLearning {
 		MarioAction[] actions = state.getLegalActions();
 		float max = LearningParams.NEGATIVE_INFINITY;
 		float cur = 0.0f;
-		MarioAction bestAction = null;
+		ArrayList<MarioAction> bestActions = new ArrayList<MarioAction>();
 		
 		for(MarioAction action: actions) {
 			cur = this.getQValue(state, action);
 			if(cur > max) {
-				max = cur;
-				bestAction = action;
+				bestActions.clear();
+				cur = max;
+				bestActions.add(action);
 			}
+			if(cur == max)
+				bestActions.add(action);
 		}
 
-		return bestAction;
+		Random rand = new Random();
+		return bestActions.get(rand.nextInt(bestActions.size()));
 
 	}
 
