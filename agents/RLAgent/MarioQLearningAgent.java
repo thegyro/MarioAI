@@ -57,7 +57,7 @@ public class MarioQLearningAgent implements LearningAgent {
 
 	@Override
 	public boolean[] getAction() {
-		return qlearning.getAction(currentState);
+		return qlearning.getAction(currentState, (currentPhase==Phase.EVAL));
 	}
 
 
@@ -76,6 +76,8 @@ public class MarioQLearningAgent implements LearningAgent {
 			episodeRewards.set(episodesCovered, sofar);
 			qlearning.update(lastState, qlearning.getLastAction(), currentState, reward);
 		}
+		if(currentPhase == Phase.EVAL)
+			System.out.println(qlearning.QValues.size());
 	}
 
 	@Override
@@ -90,6 +92,7 @@ public class MarioQLearningAgent implements LearningAgent {
 		System.out.println("Episode " + episodesCovered);
 		init();
 		episodeRewards.add(0f);
+		System.out.println("Done with. QTable size is: "+ qlearning.QValues.size());
 		learningTask.runSingleEpisode(1);
 
 		EvaluationInfo evaluationInfo = learningTask.getEnvironment().getEvaluationInfo();

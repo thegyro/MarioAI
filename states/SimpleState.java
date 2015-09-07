@@ -221,7 +221,8 @@ public class SimpleState implements MarioState{
 			10 for a kill.
 			a little bit for going in the right direction
 		*/
-		float reward = 0;
+		float livingReward = 1f;
+		float reward = livingReward;
 		reward += 10 * (totalKills - prevState_kills);
 		prevState_kills = totalKills;
 		
