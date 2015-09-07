@@ -4,6 +4,8 @@ package myagent.states;
 import ch.idsia.benchmark.mario.environments.Environment;
 import myagent.actions.MarioAction;
 
+import java.util.Arrays; // For byte[] hashCodes
+
 public class SimpleState implements MarioState{
 	
 	private boolean inited; // true if this represents a valid state
@@ -46,7 +48,7 @@ public class SimpleState implements MarioState{
 
 	@Override
 	public boolean canMarioJump(){
-		return isMarioAbleToJump;
+		return true || isMarioAbleToJump;
 	}
 	
 	@Override
@@ -115,6 +117,16 @@ public class SimpleState implements MarioState{
 	}
 	
 	@Override
+	public int hashCode(){
+		return Arrays.hashCode(getStateRep());
+	}
+
+	@Override
+	public boolean equals(Object marioState){
+		return Arrays.equals(getStateRep(), ((MarioState)marioState).getStateRep());
+	}
+
+	@Override
 	public byte[] getStateRep(){
 		/**
 		 Returns a minimal encoding of the state 
@@ -131,6 +143,8 @@ public class SimpleState implements MarioState{
 
 		 return stateRep;
 	}
+
+	
 
 	private byte[] encodeMarioState(){
 		/**
@@ -154,6 +168,7 @@ public class SimpleState implements MarioState{
 			mState[4]|=8;
 		return mState;
 	}
+
 	private byte[] encodeLevelScene(byte[][] ls){
 		/**
 			Returns a byte[] from the levelScene and enemyScene information.
@@ -211,8 +226,9 @@ public class SimpleState implements MarioState{
 		prevState_kills = totalKills;
 		
 		// Try something new.
-		reward +=  (marioFloatPos[0] - prevState_x); // /timeLeft;
+		reward +=  20 * (marioFloatPos[0] - prevState_x); // /timeLeft;
 		prevState_x = marioFloatPos[0];
+		// System.out.println("Reward: "+reward);
 		return reward;
 	}
 
@@ -222,6 +238,7 @@ public class SimpleState implements MarioState{
 		
 		if(!inited)
 			return copied;
+		
 		copied.levelScene = new byte[levelScene.length][levelScene[0].length];
 		int i=0;
 		int j=0;

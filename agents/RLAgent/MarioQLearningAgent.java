@@ -47,8 +47,9 @@ public class MarioQLearningAgent implements LearningAgent {
 		currentPhase = Phase.INIT;
 		episodesCovered = 0;
 		episodeRewards = new ArrayList<Float>();
+		scores = new ArrayList<Integer>();
 		currentState = MarioStateSelector.newStateInstance();
-		qlearning = new QLearning();
+		qlearning = new QLearning();	
 		Logger.log("-----------Super Mario Agent Created-------------\n");
 	}
 
@@ -85,6 +86,7 @@ public class MarioQLearningAgent implements LearningAgent {
 		List<Object> args = new ArrayList<Object>();
 		args.add(episodesCovered);
 		Logger.log("Learning started. Episode %d", args);
+		System.out.println("Episode " + episodesCovered);
 		init();
 		episodeRewards.add(0f);
 		learningTask.runSingleEpisode(1);
@@ -124,7 +126,7 @@ public class MarioQLearningAgent implements LearningAgent {
 	@Override
 	public void init() {
 		this.currentPhase = Phase.INIT;
-		this.episodesCovered = 0;
+		
 		lastState = null;
 		qlearning.setLastAction(null);
 	}
