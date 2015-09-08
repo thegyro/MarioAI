@@ -8,6 +8,7 @@ public class MarioAction{
 	// Define the actions
 	public static final int numberOfKeys = Environment.numberOfKeys;
 	public static final MarioAction 
+		NOACTION = new MarioAction(0, new int[]{}),
 		LEFT = new MarioAction(1, new int[]{Environment.MARIO_KEY_LEFT}),
 		RIGHT = new MarioAction(2, new int[]{Environment.MARIO_KEY_RIGHT}),
 		DOWN = new MarioAction(4,new int[]{Environment.MARIO_KEY_DOWN}),

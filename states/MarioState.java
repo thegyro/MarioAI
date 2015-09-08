@@ -1,6 +1,8 @@
 package myagent.states;
 
 import ch.idsia.benchmark.mario.environments.Environment;
+import ch.idsia.tools.EvaluationInfo;
+
 import myagent.actions.MarioAction;
 
 public interface MarioState{	
@@ -23,5 +25,8 @@ public interface MarioState{
 	public boolean canMarioJump();
 	public boolean canMarioShoot();
 	
+	public boolean isStuck();
+	public void resetStuck();
+	public EvaluationInfo getEvaluationInfo();
 
 }

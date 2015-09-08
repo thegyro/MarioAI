@@ -48,20 +48,23 @@ public class QLearning {
 		return max;
 	}
 
-	public MarioAction computeActionFromQValue(MarioState state) {
+	public MarioAction computeActionFromQValue(MarioState state, boolean tellAction) {
 		MarioAction[] actions = state.getLegalActions();
 		float max = LearningParams.NEGATIVE_INFINITY;
 		float cur = 0.0f;
 		ArrayList<MarioAction> bestActions = new ArrayList<MarioAction>();
 		
+		if(tellAction)	System.out.printf("\nLegal actions:");
 		for(MarioAction action: actions) {
+			
 			cur = this.getQValue(state, action);
+			if(tellAction)	System.out.printf("%d=> %f, ", action.hashCode(),cur);
 			if(cur > max) {
 				bestActions.clear();
-				cur = max;
+				max = cur;
 				bestActions.add(action);
 			}
-			if(cur == max)
+			else if(cur == max)
 				bestActions.add(action);
 		}
 
@@ -85,9 +88,9 @@ public class QLearning {
 		MarioAction[] actions = currentState.getLegalActions();
 
 		if(Math.random() > this.epsilon) {
-			MarioAction bestAction = this.computeActionFromQValue(currentState);
+			MarioAction bestAction = this.computeActionFromQValue(currentState,tellAction);
 			lastAction = bestAction;
-			if(tellAction)			System.out.println("Optimum action");
+			//if(tellAction)			System.out.println("Optimum action"+bestAction.hashCode());
 			return bestAction.getActionRep();
 		} else {
 			MarioAction randomAction = actions[new Random().nextInt(actions.length)];

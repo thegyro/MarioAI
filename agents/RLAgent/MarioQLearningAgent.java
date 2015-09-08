@@ -21,6 +21,7 @@ import myagent.states.MarioStateSelector;
 import myagent.actions.MarioAction;
 
 import myagent.agents.RLAgent.QLearning;
+import myagent.agents.RLAgent.LearningParams;
 
 
 public class MarioQLearningAgent implements LearningAgent {
@@ -60,6 +61,7 @@ public class MarioQLearningAgent implements LearningAgent {
 	}
 
 
+	private float evalReward;
 	@Override
 	public void integrateObservation(Environment environment) {
 		lastState = currentState.copy();
@@ -68,15 +70,18 @@ public class MarioQLearningAgent implements LearningAgent {
 		if(this.currentPhase == Phase.INIT) {
 			Logger.log("-------------Entering the Learning phase--------------");
 			this.currentPhase = Phase.LEARN;
-		} else if (this.currentPhase == Phase.LEARN) {
+		} else if (this.currentPhase == Phase.LEARN) {	// Let's learn the rewards in eval as well.
 			float reward = currentState.getReward();
 			
 			float sofar = episodeRewards.get(episodesCovered) + reward;
 			episodeRewards.set(episodesCovered, sofar);
 			qlearning.update(lastState, qlearning.getLastAction(), currentState, reward);
 		}
-		if(currentPhase == Phase.EVAL)
-			System.out.println(qlearning.QValues.size());
+		 else if( currentPhase == Phase.EVAL ){	// Anti stuck
+		 	float initialValue = qlearning.getQValue(lastState,qlearning.getLastAction());
+		 	if(currentState.isStuck())
+		 		qlearning.update(lastState, qlearning.getLastAction(), currentState, initialValue/2);
+		}
 	}
 
 	@Override
@@ -91,12 +96,12 @@ public class MarioQLearningAgent implements LearningAgent {
 		System.out.println("Episode " + episodesCovered);
 		init();
 		episodeRewards.add(0f);
-		System.out.println("Done with. QTable size is: "+ qlearning.QValues.size());
-		learningTask.runSingleEpisode(1);
+		System.out.println("Done. QTable size is: "+ qlearning.QValues.size());
 
+		learningTask.runSingleEpisode(1);
 		EvaluationInfo evaluationInfo = learningTask.getEnvironment().getEvaluationInfo();
 		int score = evaluationInfo.computeWeightedFitness();
-
+		System.out.println("Done. maxX is: "+ evaluationInfo.computeDistancePassed() );
 		scores.add(score);
 
 		if(LearningParams.DUMP_INTER_QLOGFILES)
@@ -137,9 +142,6 @@ public class MarioQLearningAgent implements LearningAgent {
 	@Override
 	public void reset() {
 		this.currentState = MarioStateSelector.newStateInstance();
-		// The following 2 lines shouldn't be here. They're to be set at the beginning. Not reset between episodes
-		// this.episodesCovered = 0;
-		// episodeRewards = new ArrayList<Float>();
 		lastState = null;
 		qlearning.setLastAction(null);
 	}
@@ -156,7 +158,7 @@ public class MarioQLearningAgent implements LearningAgent {
 
 	@Override
 	public String getName() {
-		return this.name;
+		return this.name + "("+currentState.getClass().getSimpleName()+")";
 	}
 
 	@Override

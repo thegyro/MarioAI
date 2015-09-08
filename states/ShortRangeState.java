@@ -11,20 +11,23 @@ import java.util.Random;
 
 
 
-public class SimpleState implements MarioState{
-	
+public class ShortRangeState implements MarioState{
+	private static int spaceResolution=4; // Half a cell?
+	private static int enemyRange = 1;
+	private static int 	rangeLeft = 2,
+						rangeRight = 5,
+						rangeUp = 4,
+						rangeDown= 2;
 	private boolean inited; // true if this represents a valid state
-	SimpleState(){
+	ShortRangeState(){
 		inited = false;
 	}
-
 	private EvaluationInfo evaluationInfo;
-	
 	/* The params that BasicMarioAIAgent had. Good starting point for our state */
 	protected byte[][] levelScene;
 	protected byte[][] enemyScene;
 
-	protected float[] marioFloatPos = new float[]{0,0};
+	protected float[] marioFloatPos = new float[]{0,0};//Gives relative location of enemies
 	protected float[] enemiesFloatPos = null;
 
 	protected int[] marioState = null;
@@ -139,9 +142,9 @@ public class SimpleState implements MarioState{
 	    this.marioFloatPos = environment.getMarioFloatPos();
 	    this.enemiesFloatPos = environment.getEnemiesFloatPos();
 
+	 //    for(float p:enemiesFloatPos)			System.out.printf("%f, ",p);
+		// System.out.printf("Total %d. Mario X is: (%f,%f)\n",enemiesFloatPos.length, marioFloatPos[0],marioFloatPos[1]);
 
-		// for(float p:enemiesFloatPos)			System.out.printf("%f, ",p);
-		// System.out.printf("Total %d\n",enemiesFloatPos.length);
 	    this.marioState = environment.getMarioState();
 
 	    receptiveFieldWidth = environment.getReceptiveFieldWidth();
@@ -179,8 +182,7 @@ public class SimpleState implements MarioState{
 	    receptiveFieldHeight = rfHeight;
 
 	    marioEgoRow = egoRow;
-	    marioEgoCol = egoCol;	// useless
-	 
+	    marioEgoCol = egoCol;
 	}
 	
 	@Override
@@ -200,14 +202,23 @@ public class SimpleState implements MarioState{
 		 **/
 		 byte[] marioInfo = encodeMarioState();
 		 byte[] levelInfo = encodeLevelScene(levelScene);
-		 byte[] stateRep = new byte[marioInfo.length+levelInfo.length];
+		 byte[] enemyInfo = encodeEnemiesScene();
+		 byte[] stateRep = new byte[marioInfo.length+levelInfo.length+enemyInfo.length];
 		 int limit = 0;
 		 int base=0;
-		 for(int i=0;i<marioInfo.length;i++)
-		 	stateRep[base+i]=0;
-		 for(int i=0;i<levelInfo.length;i++)
+		for(int i=0;i<marioInfo.length;i++)
+		 	stateRep[base+i]= marioInfo[i];
+		 base += marioInfo.length;
+		
+		for(int i=0;i<levelInfo.length;i++)
 		 	stateRep[base+i]=levelInfo[i];
+		 base += levelInfo.length;
 
+		for(int i=0;i<enemyInfo.length;i++){
+		 	//System.out.println(enemyInfo[i]);
+		 	stateRep[base+i]=enemyInfo[i];
+		 }
+		 base += enemyInfo.length;
 		 return stateRep;
 	}
 
@@ -217,12 +228,24 @@ public class SimpleState implements MarioState{
 		/**
 			Encodes any relevant info we have about mario in a byte[]
 		**/
-		return new byte[]{
-			(byte)Math.round(marioFloatPos[0]/5),
-			(byte)marioEgoY
+		//return new byte[]{};
+		return new byte[]{(byte)marioMode};
 
-		}; // This is needed else he gets stuck when the frame is stati
+		// return new byte[]{
+		// 	(byte)Math.round(marioFloatPos[0]/spaceResolution),
+		// 	(byte)Math.round(marioFloatPos[1]/spaceResolution)
+		// }; // This is needed else he gets stuck when the frame is stati
 		
+		
+	}
+	
+	private int[] computeMarioRelXY(){
+		/** Used to compute the limited field of vision**/
+		int x = (int)Math.floor(marioFloatPos[0]/16),
+			y = (int)Math.floor(marioFloatPos[1]/16);
+		if(x<10)
+			x=10;
+		return new int[]{x,y};
 		
 	}
 
@@ -231,17 +254,23 @@ public class SimpleState implements MarioState{
 			Returns a byte[] from the levelScene and enemyScene information.
 			Provides information on what the block holds.
 			As of now:
-				2 bits are used to represent each block.
-					X0=> Air,
-					X1=> Solid,
-					1X=> Monster
-				Hence 4 blocks are encoded in a single byte.
+				1 bits are used to represent each block.
+					0=> Air,
+					1=> Solid,
+				Hence 8 blocks are encoded in a single byte.
 		**/
 		if(ls == null || ls.length==0)	// Just incase
 			return new byte[0];
 
-		int bitsUsed = 2;
-		int repLength = ((ls.length*ls[0].length) * bitsUsed); //How many bits
+		int bitsUsed = 1;
+		byte unitCode;	// X0=> Air, X1=> Solid, 0=>No Monster, 1X=> Monster
+		int[] marioRelXY = computeMarioRelXY();
+		int startI = marioRelXY[0]- rangeLeft,
+			startJ = marioRelXY[1]- rangeDown,
+			endI = marioRelXY[0] + rangeRight,
+			endJ = marioRelXY[1] + rangeUp;
+		
+		int repLength = ((endI-startI+1)*(endJ-startJ+1) * bitsUsed); //How many bits
 		
 		if(repLength%8!=0)
 			repLength+= 8-(repLength%8);	// Incase we don't fit perfectly.
@@ -249,24 +278,55 @@ public class SimpleState implements MarioState{
 		repLength/=8;	// How many bytes do we need?
 		byte[] rep = new byte[repLength];
 		int k=-1, shiftBy=0;
-		byte unitCode;	// X0=> Air, X1=> Solid, 0=>No Monster, 1X=> Monster
-		for(int i=0;i<ls.length;i++){
-			for(int j=0;j<ls[i].length;j++){
+
+
+		for(int i=startI;i<=endI;i++){
+			for(int j=startJ;j<=endJ;j++){
 				if(shiftBy==0){
 					k++;
 					rep[k]=0;
 				}
-				unitCode=0;
-				if(levelScene[i][j]==1)
-					unitCode|=1;
-				if(enemyScene[i][j]==1)
-					unitCode|=3;
+				if( i<0 || j<0 || i>=ls.length || j>=ls[i].length )
+					unitCode=0;
+				else
+					unitCode = levelScene[i][j];;
+
 				unitCode <<= shiftBy;
 				rep[k] |= unitCode;
-				shiftBy = (shiftBy+2)%8;
+				shiftBy = (shiftBy+bitsUsed)%8;
 			}
 		}
+
 		return rep;
+	}
+
+	private byte[] encodeEnemiesScene(){
+		// Pick the closest 2
+		byte rep[] = new byte[]{(byte)127,(byte)127,(byte)127,(byte)127};;
+		
+		if(enemiesFloatPos==null)
+			return rep;
+		int enemiesInRange = enemiesFloatPos.length / 3;
+		
+		int x,y;
+		for(int i=0;i<enemiesInRange;i++){
+			x= Math.round(enemiesFloatPos[3*i+1] / spaceResolution);
+			y= Math.round(enemiesFloatPos[3*i+2] / spaceResolution);
+			if( Math.abs(x) < enemyRange )
+				continue;
+			if( Math.abs(x) < Math.abs(rep[0]) ){
+				rep[2] = rep[0];//byte[1].x = byte[0].x;	//change this
+				rep[3] = rep[1];
+				rep[0] = (byte)x;
+				rep[1] = (byte)y;
+			}
+			else if( Math.abs(x) < Math.abs(rep[2]) ){
+				rep[2] = (byte)x;//byte[1].x = byte[0].x;	//change this
+				rep[3] = (byte)y;
+			
+			}
+		}
+		return new byte[]{rep[0],rep[1]};
 	}
 
 	/** 
@@ -280,16 +340,15 @@ public class SimpleState implements MarioState{
 		*/
 		float livingReward = -1f;
 		float reward = livingReward;
-		reward += 10 * (totalKills - prevState_kills);	// Can't distinguish b/w collision and kill
+		reward += 5 * (totalKills - prevState_kills);	// Can't distinguish b/w collision and kill
 		
 		prevState_kills = totalKills;
 		if( collisions > prevState_collisions){
-			//System.out.println("OUCH!");
-			reward-=100f;
+			reward-=10f;
 		}
 		// Try something new.
 		reward +=  (marioFloatPos[0] - prevState_x); // /timeLeft;
-		//reward += currentScore - prevState_score;
+		reward += currentScore - prevState_score;
 		prevState_score = currentScore;
 		
 		// Being stuck is bad
@@ -303,7 +362,7 @@ public class SimpleState implements MarioState{
 
 	@Override
 	public MarioState copy(){
-		SimpleState copied = new SimpleState();
+		ShortRangeState copied = new ShortRangeState();
 		
 		if(!inited)
 			return copied;
