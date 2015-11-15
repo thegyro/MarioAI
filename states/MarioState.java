@@ -14,7 +14,7 @@ public interface MarioState{
 
 	public int hashCode();
 	public boolean equals(Object marioState);	// Has to be of type object to override the java equals
-	public MarioState copy();
+	public MarioState copy();					// Must copy atleast all the variables used in stateRep
 
 	public void updateObservedState(Environment environment);
 	public void updateObservationDetails(

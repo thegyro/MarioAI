@@ -1,4 +1,9 @@
 package myagent.states;
+/**
+ if you want to edit anything, It should be encodeMarioState
+
+**/
+
 
 
 import ch.idsia.benchmark.mario.environments.Environment;
@@ -13,12 +18,12 @@ import java.util.Random;
 
 public class SimpleState implements MarioState{
 	
-	private boolean inited; // true if this represents a valid state
+	protected boolean inited; // true if this represents a valid state
 	SimpleState(){
 		inited = false;
 	}
 
-	private EvaluationInfo evaluationInfo;
+	protected EvaluationInfo evaluationInfo;
 	
 	/* The params that BasicMarioAIAgent had. Good starting point for our state */
 	protected byte[][] levelScene;
@@ -48,26 +53,27 @@ public class SimpleState implements MarioState{
 					marioEgoY;
 
 	//what level of detail do we want?
-	private int zLevelScene = 2;
-	private int zLevelEnemies = 2;
+	protected int zLevelScene = 2;
+	protected int zLevelEnemies = 2;
 
 
 	// Things we don't use in the state but do in the reward ( Is that even allowed? )
-	private int prevState_kills =0;
-	private int prevState_collisions =0;
-	private float 	prevState_x = 0,
-					prevState_y = 0;
+	protected int prevState_kills =0;
+	protected int prevState_collisions =0;
+	protected float 	prevState_x = 0,
+					prevState_y = 0,
+					maxEver_x = 0;
 
-	private int distanceCovered = 0;
-	private int collisions = 0;
+	protected int distanceCovered = 0;
+	protected int collisions = 0;
 
 	// How many ticks till you're declared stuck?
-	private static final int stuckCriteria = 48;	// 2 secs @ 48 fps
-	private int stuckCount = 0;
+	protected static final int stuckCriteria = 48;	// 2 secs @ 48 fps
+	protected int stuckCount = 0;
 
 	// Add something for prevState_action?
-	private float prevState_score = 0;
-	private int totalKills = 0;
+	protected float prevState_score = 0;
+	protected int totalKills = 0;
 
 	@Override
 	public boolean canMarioJump(){
@@ -79,20 +85,26 @@ public class SimpleState implements MarioState{
 		return isMarioAbleToShoot;
 	}
 
-	private static int didNoAction=0;
+	protected static int didNoAction=0;
 	@Override
 	public MarioAction[] getLegalActions(){
 		
 		MarioAction[] possibleActions = new MarioAction[]{
 			MarioAction.LEFT,
 			MarioAction.RIGHT,
-			MarioAction.JUMP,
+		//	MarioAction.JUMP,
 			MarioAction.LEFT_JUMP,
-			MarioAction.RIGHT_JUMP
+			MarioAction.RIGHT_JUMP,
+		//	MarioAction.SPEED,
+			MarioAction.LEFT_SHOOT,
+			MarioAction.RIGHT_SHOOT,
+			MarioAction.RIGHT_JUMP_SHOOT,
+			MarioAction.LEFT_JUMP_SHOOT,
+		
 		};
 		//if(true)		return possibleActions;
 
-		if( stuckCount > stuckCriteria ){
+		if( isStuck() ){
 			didNoAction =3;
 			stuckCount=0;
 		} 
@@ -102,9 +114,7 @@ public class SimpleState implements MarioState{
 			return new MarioAction[]{
 				possibleActions[new Random().nextInt(possibleActions.length)]
 			};
-			//System.out.println("Meh");
 			
-			//failedActions[failedCount++] = prevAction;
 		}
 
 		/*
@@ -131,6 +141,8 @@ public class SimpleState implements MarioState{
 
 	    levelScene = environment.getLevelSceneObservationZ(zLevelScene);
 	    enemyScene = environment.getEnemiesObservationZ(zLevelEnemies);
+	    
+	    if(marioFloatPos[0]>maxEver_x) maxEver_x = marioFloatPos[0];
 	    
 	    prevState_x = marioFloatPos[0];
 		prevState_y = marioFloatPos[1];
@@ -213,20 +225,20 @@ public class SimpleState implements MarioState{
 
 	
 
-	private byte[] encodeMarioState(){
+	protected byte[] encodeMarioState(){
 		/**
 			Encodes any relevant info we have about mario in a byte[]
 		**/
 		return new byte[]{
 			(byte)Math.round(marioFloatPos[0]/5),
-			(byte)marioEgoY
-
+			(byte)(marioEgoY/5),
+			(byte)((canMarioShoot())?1:0)	// Else shooting makes no sense
 		}; // This is needed else he gets stuck when the frame is stati
 		
 		
 	}
 
-	private byte[] encodeLevelScene(byte[][] ls){
+	protected byte[] encodeLevelScene(byte[][] ls){
 		/**
 			Returns a byte[] from the levelScene and enemyScene information.
 			Provides information on what the block holds.
@@ -283,17 +295,17 @@ public class SimpleState implements MarioState{
 		reward += 10 * (totalKills - prevState_kills);	// Can't distinguish b/w collision and kill
 		
 		prevState_kills = totalKills;
-		if( collisions > prevState_collisions){
-			//System.out.println("OUCH!");
+		if( collisions > prevState_collisions)
 			reward-=100f;
-		}
+		
 		// Try something new.
 		reward +=  (marioFloatPos[0] - prevState_x); // /timeLeft;
-		//reward += currentScore - prevState_score;
+		
 		prevState_score = currentScore;
 		
 		// Being stuck is bad
-		if(stuckCount > stuckCriteria){
+		
+		if( isStuck() ){
 			//System.out.println("Stuck!"+stuckCount);
 			reward-= 20;
 		}
@@ -358,6 +370,7 @@ public class SimpleState implements MarioState{
 		// Things we don't use in the state but do in the reward ( Is that even allowed? )
 		copied.prevState_kills = prevState_kills;
 		copied.prevState_x = prevState_x;
+		copied.maxEver_x = maxEver_x;
 		copied.totalKills = totalKills;
 
 		copied.inited=true;
@@ -379,5 +392,16 @@ public class SimpleState implements MarioState{
 	public EvaluationInfo getEvaluationInfo(){
 		return evaluationInfo;
 	}
+
+	protected int[] computeMarioRelXY(){
+		/** Used to compute the limited field of vision**/
+		int x = (int)Math.floor(marioFloatPos[0]/16),
+			y = (int)Math.floor(marioFloatPos[1]/16);
+		if(x<10)
+			x=10;
+		return new int[]{x,y};
+		
+	}
+
 }
 

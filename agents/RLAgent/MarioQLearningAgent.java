@@ -89,7 +89,9 @@ public class MarioQLearningAgent implements LearningAgent {
 		currentState.updateObservationDetails(rfWidth, rfHeight, egoRow, egoCol);
 	}
 
+	private int totalDistanceCovered = 0;
 	public void learnOnce() {
+		
 		List<Object> args = new ArrayList<Object>();
 		args.add(episodesCovered);
 		Logger.log("Learning started. Episode %d", args);
@@ -99,9 +101,12 @@ public class MarioQLearningAgent implements LearningAgent {
 		System.out.println("Done. QTable size is: "+ qlearning.QValues.size());
 
 		learningTask.runSingleEpisode(1);
+		
 		EvaluationInfo evaluationInfo = learningTask.getEnvironment().getEvaluationInfo();
 		int score = evaluationInfo.computeWeightedFitness();
 		System.out.println("Done. maxX is: "+ evaluationInfo.computeDistancePassed() );
+		totalDistanceCovered += evaluationInfo.computeDistancePassed();
+
 		scores.add(score);
 
 		if(LearningParams.DUMP_INTER_QLOGFILES)
@@ -116,6 +121,7 @@ public class MarioQLearningAgent implements LearningAgent {
 			learnOnce();
 		}
 		System.out.printf("LEARNT %d times\n", LearningParams.NUM_TRAINING);
+		System.out.println("Average distance covered="+totalDistanceCovered/LearningParams.NUM_TRAINING);
 		goToEval();
 	}
 
