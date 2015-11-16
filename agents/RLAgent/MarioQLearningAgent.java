@@ -50,6 +50,7 @@ public class MarioQLearningAgent implements LearningAgent {
 		episodeRewards = new ArrayList<Float>();
 		scores = new ArrayList<Integer>();
 		currentState = MarioStateSelector.newStateInstance();
+		System.out.println("Using state: " + currentState.getClass().getSimpleName());
 		qlearning = new QLearning();	
 		Logger.log("-----------Super Mario Agent Created-------------\n");
 	}
@@ -76,11 +77,6 @@ public class MarioQLearningAgent implements LearningAgent {
 			float sofar = episodeRewards.get(episodesCovered) + reward;
 			episodeRewards.set(episodesCovered, sofar);
 			qlearning.update(lastState, qlearning.getLastAction(), currentState, reward);
-		}
-		 else if( currentPhase == Phase.EVAL ){	// Anti stuck
-		 	float initialValue = qlearning.getQValue(lastState,qlearning.getLastAction());
-		 	if(currentState.isStuck())
-		 		qlearning.update(lastState, qlearning.getLastAction(), currentState, initialValue/2);
 		}
 	}
 

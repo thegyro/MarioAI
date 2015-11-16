@@ -58,7 +58,7 @@ public class QLearning {
 		for(MarioAction action: actions) {
 			
 			cur = this.getQValue(state, action);
-			if(tellAction)	System.out.printf("%d=> %f, ", action.hashCode(),cur);
+			if(tellAction)	System.out.printf("%d=> %.3f, ", action.hashCode(),cur);
 			if(cur > max) {
 				bestActions.clear();
 				max = cur;
