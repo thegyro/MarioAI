@@ -234,8 +234,19 @@ public class ShortRangeState implements MarioState{
 		
 	}
 	
+
 	private int[] computeMarioRelXY(){
 		/** Used to compute the limited field of vision**/
+		int x = (int)Math.floor(marioFloatPos[0]/16)-1,
+			y = (int)Math.floor(marioFloatPos[1]/16)-1;
+		if(x>9)
+			x=9;
+		
+		return new int[]{x,y};
+		
+	}
+/*	private int[] computeMarioRelXY(){
+		/** Used to compute the limited field of vision** /
 		int x = (int)Math.floor(marioFloatPos[0]/16),
 			y = (int)Math.floor(marioFloatPos[1]/16);
 		if(x<10)
@@ -243,7 +254,7 @@ public class ShortRangeState implements MarioState{
 		return new int[]{x,y};
 		
 	}
-
+*/
 	private byte[] encodeLevelScene(byte[][] ls){
 		/**
 			Returns a byte[] from the levelScene and enemyScene information.
