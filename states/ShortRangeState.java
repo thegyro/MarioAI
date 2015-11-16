@@ -12,22 +12,23 @@ import java.util.Random;
 
 
 public class ShortRangeState implements MarioState{
-	private static final int HOW_MANY_ENEMIES = 2;
-	private static float HALF_CELL_X = 8f;
-	private static float ENEMY_HALF_CELL_X = 13.47f,
+	protected static final int HOW_MANY_ENEMIES = 2; // do you want in the rep
+	protected static float HALF_CELL_X = 8f,
+							HALF_CELL_Y = 8f;
+	protected static float ENEMY_HALF_CELL_X = 13.47f,
 						 ENEMY_HALF_CELL_Y = 11.63f;
 
-	private static float  spaceResolution=5f; // One whole cell?
-	private static int enemyRange = 6;
-	private static int 	rangeLeft = 2,
+	protected static float  spaceResolution=5f; // One whole cell?
+	protected static int enemyRange = 6;
+	protected static int rangeLeft = 2,
 						rangeRight = 3,
 						rangeUp = 4,
 						rangeDown= 2;
-	private boolean inited; // true if this represents a valid state
+	protected boolean inited; // true if this represents a valid state
 	ShortRangeState(){
 		inited = false;
 	}
-	private EvaluationInfo evaluationInfo;
+	protected EvaluationInfo evaluationInfo;
 	/* The params that BasicMarioAIAgent had. Good starting point for our state */
 	protected byte[][] levelScene;
 	protected byte[][] enemyScene;
@@ -56,27 +57,27 @@ public class ShortRangeState implements MarioState{
 					marioEgoY;
 
 	//what level of detail do we want?
-	private int zLevelScene = 2;
-	private int zLevelEnemies = 2;
+	protected int zLevelScene = 2;
+	protected int zLevelEnemies = 2;
 
 
 	// Things we don't use in the state but do in the reward ( Is that even allowed? )
-	private int prevState_kills =0;
-	private int prevState_collisions =0;
-	private float 	prevState_x = 0,
+	protected int prevState_kills =0;
+	protected int prevState_collisions =0;
+	protected float 	prevState_x = 0,
 					prevState_y = 0,
 					maxEver_x = 0;
 
-	private int distanceCovered = 0;
-	private int collisions = 0;
+	protected int distanceCovered = 0;
+	protected int collisions = 0;
 
 	// How many ticks till you're declared stuck?
-	private static final int stuckCriteria = 16;	//  sec @ 24 fps
-	private int stuckCount = 0;
+	protected static final int stuckCriteria = 48;	//  sec @ 24 fps
+	protected int stuckCount = 0;
 
 	// Add something for prevState_action?
-	private float prevState_score = 0;
-	private int totalKills = 0;
+	protected float prevState_score = 0;
+	protected int totalKills = 0;
 
 	@Override
 	public boolean canMarioJump(){
@@ -220,7 +221,7 @@ public class ShortRangeState implements MarioState{
 
 	
 
-	private byte[] encodeMarioState(){
+	protected byte[] encodeMarioState(){
 		/**
 			Encodes any relevant info we have about mario in a byte[]
 		**/
@@ -235,7 +236,7 @@ public class ShortRangeState implements MarioState{
 	}
 	
 
-	private int[] computeMarioRelXY(){
+	protected int[] computeMarioRelXY(){
 		/** Used to compute the limited field of vision**/
 		int x = (int)Math.floor(marioFloatPos[0]/16)-1,
 			y = (int)Math.floor(marioFloatPos[1]/16)-1;
@@ -245,17 +246,8 @@ public class ShortRangeState implements MarioState{
 		return new int[]{x,y};
 		
 	}
-/*	private int[] computeMarioRelXY(){
-		/** Used to compute the limited field of vision** /
-		int x = (int)Math.floor(marioFloatPos[0]/16),
-			y = (int)Math.floor(marioFloatPos[1]/16);
-		if(x<10)
-			x=10;
-		return new int[]{x,y};
-		
-	}
-*/
-	private byte[] encodeLevelScene(byte[][] ls){
+
+	protected byte[] encodeLevelScene(byte[][] ls){
 		/**
 			Returns a byte[] from the levelScene and enemyScene information.
 			Provides information on what the block holds.
@@ -306,7 +298,7 @@ public class ShortRangeState implements MarioState{
 		return rep;
 	}
 
-	private byte[] encodeEnemiesScene(){
+	protected byte[] encodeEnemiesScene(){
 		// Pick the closest 2
 		byte rep[] = new byte[]{(byte)127,(byte)127,(byte)127,(byte)127};;
 		
@@ -317,8 +309,8 @@ public class ShortRangeState implements MarioState{
 		int x,y;
 		
 		for(int i=0;i<enemiesInRange;i++){
-			x= Math.round(enemiesFloatPos[3*i+1] / ENEMY_HALF_CELL_X );
-			y= Math.round(enemiesFloatPos[3*i+2] / (ENEMY_HALF_CELL_X) );//2*ENEMY_HALF_CELL_X
+			x= Math.round(enemiesFloatPos[3*i+1] / (2*ENEMY_HALF_CELL_X) );
+			y= Math.round(enemiesFloatPos[3*i+2] / (2*ENEMY_HALF_CELL_Y) );//2*ENEMY_HALF_CELL_X
 			//System.out.printf("e(%d), ", x);
 			if( Math.abs(x) > enemyRange )
 				continue;
@@ -338,7 +330,7 @@ public class ShortRangeState implements MarioState{
 		if( HOW_MANY_ENEMIES ==2 )
 			return new byte[]{rep[0],rep[1],rep[2],rep[3]};
 		else
-			return new byte[]{rep[0],rep[1],rep[2],rep[3]};
+			return new byte[]{rep[0],rep[1]};
 	}
 
 	/** 

@@ -68,7 +68,7 @@ public class SimpleState implements MarioState{
 	protected int collisions = 0;
 
 	// How many ticks till you're declared stuck?
-	protected static final int stuckCriteria = 48;	// 2 secs @ 48 fps
+	protected static final int stuckCriteria = 6;	// 0.5 secs @ 48 fps
 	protected int stuckCount = 0;
 
 	// Add something for prevState_action?
@@ -105,7 +105,9 @@ public class SimpleState implements MarioState{
 		//if(true)		return possibleActions;
 
 		if( isStuck() ){
-			didNoAction =3;
+//			System.out.println("STUCK!");
+
+			didNoAction =2;
 			stuckCount=0;
 		} 
 		
@@ -176,7 +178,8 @@ public class SimpleState implements MarioState{
 	    inited=true;
 
 	    // Check if stuck:
-	    if( Math.abs(prevState_x - marioFloatPos[0]) < 3 )
+	    //if( Math.abs(prevState_x - marioFloatPos[0]) < 3 )
+	    if( Math.abs(maxEver_x - marioFloatPos[0]) < 2 )
 	    	stuckCount++;
 	    else
 	    	stuckCount=0;
@@ -262,6 +265,7 @@ public class SimpleState implements MarioState{
 		byte[] rep = new byte[repLength];
 		int k=-1, shiftBy=0;
 		byte unitCode;	// X0=> Air, X1=> Solid, 0=>No Monster, 1X=> Monster
+
 		for(int i=0;i<ls.length;i++){
 			for(int j=0;j<ls[i].length;j++){
 				if(shiftBy==0){
@@ -284,6 +288,8 @@ public class SimpleState implements MarioState{
 	/** 
 		Members to calculate the immediate reward
 	**/
+
+	protected boolean wasStuckInLastTurn = false;
 	@Override
 	public float getReward(){
 		/* 
@@ -294,22 +300,23 @@ public class SimpleState implements MarioState{
 		float reward = livingReward;
 		reward += 10 * (totalKills - prevState_kills);	// Can't distinguish b/w collision and kill
 		
-		prevState_kills = totalKills;
-		if( collisions > prevState_collisions)
-			reward-=100f;
 		
+		if( collisions > prevState_collisions && totalKills==prevState_kills){
+			//System.out.print("ouch!\t");
+			reward-=20f;
+		}
+		prevState_kills = totalKills;
 		// Try something new.
-		reward +=  (marioFloatPos[0] - prevState_x); // /timeLeft;
+		reward +=  (marioFloatPos[0] - prevState_x); // without the /5, the reward is too large
 		
 		prevState_score = currentScore;
 		
 		// Being stuck is bad
-		
-		if( isStuck() ){
-			//System.out.println("Stuck!"+stuckCount);
-			reward-= 20;
-		}
-		// System.out.println("Reward: "+reward);
+
+		if( wasStuckInLastTurn && !isStuck() )
+			reward+= 20f; // Reward unstuck
+		wasStuckInLastTurn = isStuck();
+	
 		return reward;
 	}
 
