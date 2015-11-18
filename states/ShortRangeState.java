@@ -12,19 +12,26 @@ import java.util.Random;
 
 
 public class ShortRangeState implements MarioState{
-	protected static final int HOW_MANY_ENEMIES = 2; // do you want in the rep
+	protected static int HOW_MANY_ENEMIES = 2; // do you want in the rep
 	protected static float HALF_CELL_X = 8f,
 							HALF_CELL_Y = 8f;
 	protected static float ENEMY_HALF_CELL_X = 13.47f,
 						 ENEMY_HALF_CELL_Y = 11.63f;
 
 	protected static float  spaceResolution=5f; // One whole cell?
-	protected static int enemyRange = 6;
+	protected static int enemyRange = 5;
 	protected static int rangeLeft = 2,
 						rangeRight = 3,
 						rangeUp = 4,
 						rangeDown= 2;
+	
+	// How many ticks till you're declared stuck?
+	protected static final int 	stuckCriteria = 36;
+	
+
 	protected boolean inited; // true if this represents a valid state
+	public boolean _wasKissingAWall = false;	
+
 	ShortRangeState(){
 		inited = false;
 	}
@@ -71,8 +78,6 @@ public class ShortRangeState implements MarioState{
 	protected int distanceCovered = 0;
 	protected int collisions = 0;
 
-	// How many ticks till you're declared stuck?
-	protected static final int stuckCriteria = 48;	//  sec @ 24 fps
 	protected int stuckCount = 0;
 
 	// Add something for prevState_action?
@@ -95,7 +100,7 @@ public class ShortRangeState implements MarioState{
 		MarioAction[] possibleActions = new MarioAction[]{
 			MarioAction.LEFT,
 			MarioAction.RIGHT,
-		//	MarioAction.JUMP,
+			//MarioAction.JUMP,
 			MarioAction.LEFT_JUMP,
 			MarioAction.RIGHT_JUMP,
 		//	MarioAction.SPEED,
@@ -105,7 +110,7 @@ public class ShortRangeState implements MarioState{
 			MarioAction.LEFT_JUMP_SHOOT,
 		
 		};
-	
+		
 		return possibleActions;
 	}
 
@@ -122,7 +127,6 @@ public class ShortRangeState implements MarioState{
 	    receptiveFieldHeight = environment.getReceptiveFieldHeight();
 	    evaluationInfo = environment.getEvaluationInfo();
 	    distanceCovered = evaluationInfo.distancePassedCells;
-	    collisions = evaluationInfo.collisionsWithCreatures;
 	    marioStatus = marioState[0];
 		marioMode = marioState[1];
 	    isMarioOnGround = marioState[2] == 1;
@@ -132,45 +136,36 @@ public class ShortRangeState implements MarioState{
 		    
 	    //timeLeft = marioState[10];
 	    currentScore = environment.getIntermediateReward();
-
+	    prevState_kills = totalKills;
 	    totalKills = environment.getKillsByStomp();
+
+	    prevState_collisions = collisions;	// What is this doing here?
+		collisions = evaluationInfo.collisionsWithCreatures;
+	    
 
 	    inited=true;
 
 	    
+
 	    prevState_x = marioFloatPos[0];
 		prevState_y = marioFloatPos[1];
-		prevState_collisions = collisions;
-
+		
 	    this.marioFloatPos = environment.getMarioFloatPos();
 	    this.enemiesFloatPos = environment.getEnemiesFloatPos();
-	    // Check if stuck:
-	    //
-	    /*
-	    float mx = Math.round(marioFloatPos[0]/5);
-	    if(mx > maxEver_x) { maxEver_x = (mx+1f); stuckCount = 0;}
-	    else
-	    	stuckCount++;
-    	//*/
-    	/*
-		if(marioFloatPos[0] > maxEver_x ){ maxEver_x = marioFloatPos[0]; stuckCount = 0;}
-	    else if ( (maxEver_x+0.1f) >= marioFloatPos[0] )//( Math.abs(maxEver_x - marioFloatPos[0]) < 2f )
-	    	stuckCount++;
-	    else 
-	    	stuckCount=0;
-	    //*/
-	    ///*
-	     
+	    
 	    if(marioFloatPos[0] > maxEver_x )maxEver_x = marioFloatPos[0];
 		
-	    if( Math.abs(prevState_x - marioFloatPos[0]) < 3f )
-	    	stuckCount++;
-	    else
-	    	stuckCount=0;
-	    //*/
+	    
 	    int[] marioEgoPos = environment.getMarioEgoPos();
 	    marioEgoX = marioEgoPos[0];
 	    marioEgoY = marioEgoPos[1];
+
+		if( Math.abs(prevState_x - marioFloatPos[0]) < 3f )
+	    	stuckCount++;
+	    else
+	    	stuckCount=0;	
+
+
 	}
 
 	@Override
@@ -212,7 +207,6 @@ public class ShortRangeState implements MarioState{
 		 base += levelInfo.length;
 
 		for(int i=0;i<enemyInfo.length;i++){
-		 	//System.out.println(enemyInfo[i]);
 		 	stateRep[base+i]=enemyInfo[i];
 		 }
 		 base += enemyInfo.length;
@@ -226,13 +220,14 @@ public class ShortRangeState implements MarioState{
 			Encodes any relevant info we have about mario in a byte[]
 		**/
 		//return new byte[]{};
-		//if(isStuck()) System.out.println("\n STUCK@"+marioFloatPos[0]/8);
 		return new byte[]{
-			(byte)((Math.round(marioFloatPos[0])%5)/2), // This will work, with or without you. (and the /2)
+			//(byte)((Math.round(marioFloatPos[0])%5)/2), // This will work, with or without you. (and the /2)
+	//		(byte)(isStuck()?1:0),
 			(byte)(isStuck()?1:0),
+			(byte)(isKissingAWall()?1:0),
 		}; // This is needed else he gets stuck when the frame is stati
 		
-		
+	
 	}
 	
 
@@ -299,8 +294,8 @@ public class ShortRangeState implements MarioState{
 	}
 
 	protected byte[] encodeEnemiesScene(){
-		// Pick the closest 2
-		byte rep[] = new byte[]{(byte)127,(byte)127,(byte)127,(byte)127};;
+		// Pick the closest
+		byte rep[] = new byte[]{(byte)127,(byte)127,(byte)127,(byte)127};
 		
 		if(enemiesFloatPos==null)
 			return rep;
@@ -309,8 +304,8 @@ public class ShortRangeState implements MarioState{
 		int x,y;
 		
 		for(int i=0;i<enemiesInRange;i++){
-			x= Math.round(enemiesFloatPos[3*i+1] / (2*ENEMY_HALF_CELL_X) );
-			y= Math.round(enemiesFloatPos[3*i+2] / (2*ENEMY_HALF_CELL_Y) );//2*ENEMY_HALF_CELL_X
+			x= Math.round(enemiesFloatPos[3*i+1] / (ENEMY_HALF_CELL_X) );
+			y= Math.round(enemiesFloatPos[3*i+2] / (ENEMY_HALF_CELL_Y) );//2*ENEMY_HALF_CELL_X
 			//System.out.printf("e(%d), ", x);
 			if( Math.abs(x) > enemyRange )
 				continue;
@@ -326,7 +321,7 @@ public class ShortRangeState implements MarioState{
 			
 			}
 		}
-		// if(rep[0]!=127)			System.out.println(rep[0]+" "+rep[1]+" ");
+		
 		if( HOW_MANY_ENEMIES ==2 )
 			return new byte[]{rep[0],rep[1],rep[2],rep[3]};
 		else
@@ -359,34 +354,10 @@ public class ShortRangeState implements MarioState{
 		float reward = 0f;
 		
 		reward += (marioFloatPos[0] - prevState_x);
+		reward -= 200f *  (collisions - prevState_collisions);
+		//reward += 500f * (totalKills - prevState_kills); 
 		
-		reward -= 100f *  (collisions - prevState_collisions);
-		if(inDanger())				reward -= 20f;
-		
-		//if(isStuck())			reward -= 5f;
-		
-
-		//if( wasStuckInLastTurn && !isStuck() )			reward+= 50f; // Reward unstuck
-		wasStuckInLastTurn = isStuck();
-
-		/*
-		//reward += 5 * (totalKills - prevState_kills);	// Can't distinguish b/w collision and kill
-		
-		prevState_kills = totalKills;
-		//reward -= 10 *  (collisions - prevState_collisions);
-		// Try something new.
-		
-		// Being stuck is bad
-		
-		if(stuckCount > stuckCriteria){
-			//System.out.println("Stuck!"+stuckCount);
-			reward-= 20;
-		}
-		*/
-		
-		prevState_score = currentScore;
-		
-		// System.out.println("Reward: "+reward);
+		if(isKissingAWall())reward -=50f;//*Math.abs(11-(marioFloatPos[0]%16));
 		return reward;
 	}
 
@@ -460,6 +431,7 @@ public class ShortRangeState implements MarioState{
 		return (stuckCount > stuckCriteria);
 	}
 
+
 	@Override
 	public void resetStuck(){
 		stuckCount=0;
@@ -487,5 +459,10 @@ public class ShortRangeState implements MarioState{
 			return false;
 	}
 
+
+	
+	public boolean isKissingAWall(){
+		return isMarioOnGround && (Math.abs( (marioFloatPos[0]%16)-11 ) < 0.5f);
+	}
 }
 

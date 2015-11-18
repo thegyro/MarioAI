@@ -130,6 +130,8 @@ public class MarioQLearningAgent implements LearningAgent {
 		Logger.log("---------------Turning epsilon and alpha off---------");
 		qlearning.setEpsilon(0);
 		qlearning.setAlpha(0);
+
+		
 	}
 
 
